@@ -14,91 +14,109 @@
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="{{url_for('dashboard')}}">Home</a></li>
           <li class="breadcrumb-item"><a href="{{url_for('list_instances')}}">Instances</a></li>
-          <li class="breadcrumb-item active">{{instance_details['metadata']['name']}}</li>
+          <li class="breadcrumb-item active">{{name}}</li>
         </ol>
+        <div id='instance-details'>
+          <div v-if='loading'>
+            <h2>Instance: Loading Data <i class="fas fa-sync fa-spin"></i></h2>
+          </div>
+          <div v-else>
+            <h2>Instance: {[{instance_details.metadata.name}]}</h2>
+            <h6><strong>Application:</strong> {[{instance_details.metadata.application}]}</h6>
+            <h6><strong>Version:</strong> {[{instance_details.metadata.appVersion}]}</h6>
+            <h6><strong>Cluster:</strong> {[{instance_details.metadata.cluster}]}</h6>
+            <h6><strong>Group:</strong> {[{instance_details.metadata.group}]}</h6>
+            <h6><strong>Created:</strong> {[{instance_details.metadata.created}]}</h6>
+          </div>
+          <a href="#" class="btn btn-danger btn-sm btn-box-shadow" onclick="btnConfirm()">Delete Instance</a>
+          <hr/>
 
-        <h2>Instance: {{instance_details['metadata']['name']}}</h2>
-        <h6><strong>Application:</strong> {{instance_details['metadata']['application']}}</h6>
-        <h6><strong>Version:</strong> {{instance_details['metadata']['appVersion']}}</h6>
-        <h6><strong>Cluster:</strong> {{instance_details['metadata']['cluster']}}</h6>
-        <h6><strong>Group:</strong> {{instance_details['metadata']['group']}}</h6>
-        <h6><strong>Created:</strong> {{instance_details['metadata']['created']}}</h6>
-        <a href="#" class="btn btn-danger btn-sm btn-box-shadow" onclick="btnConfirm()">Delete Instance</a>
-        <hr/>
+          <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+              <a class="nav-link active" href="#details" role="tab" data-toggle="tab">Details</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#configuration" role="tab" data-toggle="tab">Configuration</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#logs" role="tab" data-toggle="tab">Logs</a>
+            </li>
+          </ul>
 
-        <ul class="nav nav-tabs" role="tablist">
-          <li class="nav-item">
-            <a class="nav-link active" href="#details" role="tab" data-toggle="tab">Details</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#configuration" role="tab" data-toggle="tab">Configuration</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#logs" role="tab" data-toggle="tab">Logs</a>
-          </li>
-        </ul>
+          <!-- Tab panes -->
+          <div class="tab-content">
 
-        <!-- Tab panes -->
-        <div class="tab-content">
-
-          <div role="tabpanel" class="tab-pane active" id="details">
-            {% if instance_status %}
-              {% if instance_details['services'] %}
-            <div class="table-responsive">
-              <br>
-              <h4>Detailed Services</h4>
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th scope="col">Name</th>
-                    <th scope="col">External IP</th>
-                    <th scope="col">Cluster IP</th>
-                    <th scope="col">Ports</th>
-                    <th scope="col">URL</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for service in instance_details['services'] %}
-                  <tr>
-                    {% set addr = 'http://' +service['externalIP'] + ':' + service['ports'].split(':')[1].split('/')[0] %}
-                    <td>{{service['name']}}</td>
-                    <td><a href="{{addr}}" target="_blank">{{service['externalIP']}}</a></td>
-                    <td>{{service['clusterIP']}}</td>
-                    <td>{{service['ports']}}</td>
-                    <td><a href="{{service['url']}}" target="_blank">{{service['url']}}</a></td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+            <div role="tabpanel" class="tab-pane active" id="details">
+                <div class="table-responsive">
+                    <br>
+                    <h4>Detailed Services</h4>
+                    <table class="table table-hover">
+                    <thead>
+                        <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">External IP</th>
+                        <th scope="col">Cluster IP</th>
+                        <th scope="col">Ports</th>
+                        <th scope="col">URL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-if="loading">
+                        <td>Loading Data <i class="fas fa-sync fa-spin"></i></td>
+                        <td><i class="fas fa-sync fa-spin"></i></td>
+                        <td><i class="fas fa-sync fa-spin"></i></td>
+                        <td><i class="fas fa-sync fa-spin"></i></td>
+                        <td><i class="fas fa-sync fa-spin"></i></td>
+                      </tr>
+                      <tr v-if="failed">
+                        <td>Failed to load the data, please refresh the page <i class="far fa-times-circle"></i></td>
+                        <td><i class="far fa-times-circle"></i></td>
+                        <td><i class="far fa-times-circle"></i></td>
+                        <td><i class="far fa-times-circle"></i></td>
+                        <td><i class="far fa-times-circle"></i></td>
+                      </tr>
+                      <tr v-for='service in instance_details.services'>
+                        <td>{[{service.name}]}</td>
+                        <td><a href="" target="_blank">{[{service.externalIP}]}</a></td>
+                        <td>{[{service.clusterIP}]}</td>
+                        <td>{[{service.ports}]}</td>
+                        <td><a href="{[{service.url}]}" target="_blank">{[{service.url}]}</a></td>
+                      </tr>
+                    </tbody>
+                    </table>
+                </div>
+                <br>
+        
+                {%include 'instance_profile_pod_details.html'%}
+        
+                <br>
+        
+                <!-- include 'instance_profile_monitoring.html -->
+        
+                <br>
             </div>
-              {% endif %}
-            <br>
-
-            {%include 'instance_profile_pod_details.html'%}
-
-            <br>
-
-            {%include 'instance_profile_monitoring.html'%}
-
-            <br>
-            {% else %}
-            <h1>Detailed services information currently not available</h1>
-            {% endif %}
+        
+            <!-- CONFIGURATION TAB PANEL -->
+            <div role="tabpanel" class="tab-pane fade" id="configuration">
+                <br>
+                <!-- <h3>Configuration</h3> -->
+                <span v-if='loading'>Loading Data <i class="fas fa-sync fa-spin"></i></span>
+                <span v-if='failed'>Failed to load the data, please refresh the page <i class="far fa-times-circle"></i></span>
+                <pre v-else class="app-logs">{[{instance_details.metadata.configuration}]}</pre>
+            </div>
+            <!-- INSTANE LOG TAB PANEL -->
+            <div role="tabpanel" class="tab-pane fade" id="logs">
+                <br>
+                <!-- <h3>Logs</h3> -->
+                <!-- <div id='instance-logs'>
+                    <span v-if='loading'>Loading Data <i class="fas fa-sync fa-spin"></i></span>
+                    <span v-if='failed'>Failed to load the data, please refresh the page <i class="far fa-times-circle"></i></span>
+                    <pre v-else class="app-logs">{[{instance_logs.logs}]}</pre>
+                </div> -->
+            </div>
+        
+          
           </div>
-
-          <!-- CONFIGURATION TAB PANEL -->
-          <div role="tabpanel" class="tab-pane fade" id="configuration">
-            <br>
-            <!-- <h3>Configuration</h3> -->
-            <pre>{% if instance_details['metadata']['configuration'] %}{{instance_details['metadata']['configuration']}}{% else %}Configuration currently unavailable{% endif %}</pre>
-          </div>
-          <!-- INSTANE LOG TAB PANEL -->
-          <div role="tabpanel" class="tab-pane fade" id="logs">
-            <br>
-            <!-- <h3>Logs</h3> -->
-            <pre class="app-logs">{% if instance_log['logs'] %}{{instance_log['logs']}}{% else %}Logs currently unavailable{% endif %}</pre>
-          </div>
-
         </div>
       </div>
 
@@ -106,9 +124,53 @@
   </div>
 </section>
 
+<meta id="flask-data" 
+      data-instance_name="{{name}}" >
 <script>
+var flask_data = $('#flask-data').data();
+var instance_name = flask_data.instance_name
+
 $(document).ready(function() {
-    $('#pods-table').DataTable();
+  new Vue({
+    el: '#instance-details',
+    data () {
+      return {
+        instance_details: null,
+		    loading: true,
+		    failed: false
+	    }
+	  },
+	  updated: function() {
+	    //call DataTable after view is updated
+	    $('#pods-table').DataTable();
+	  },
+	  mounted() {
+      axios.get('/get-instance-details-xhr/' + instance_name)
+      .then(function (response) {
+        this.instance_details = response.data;
+				this.loading = false;
+        }.bind(this)) //must use bind(this) unless using arrow function
+        .catch(error => { this.failed = true; this.loading = false; })
+      }
+    });
+  // new Vue({
+  //   el: '#instance-logs',
+  //   data () {
+  //     return {
+  //       instance_logs: null,
+	// 	    loading: true,
+	// 	    failed: false
+	//     }
+	//   },
+	//   mounted() {
+  //     axios.get('/get-instance-logs-xhr/' + instance_name)
+  //     .then(function (response) {
+  //       this.instance_logs = response.data;
+	// 			this.loading = false;
+  //       }.bind(this)) //must use bind(this) unless using arrow function
+  //       .catch(error => { this.failed = true; this.loading = false; })
+  //     }
+  //   });
 });
 
 function btnConfirm() {

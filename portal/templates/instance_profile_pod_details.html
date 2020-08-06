@@ -9,6 +9,13 @@
       </tr>
     </thead>
     <tbody data-link="row" class="rowlink" style="font-size:14px;">
+      <div v-if="instance_details.details.lenth && instance_details.details.pods.length && instance_details.details.pods[0].kind !== 'Error'">
+        <tr v-for='pod in instance_details.details.pods' data-toggle="collapse" :data-target="'#accordion-' + pod.name" class="clickable">
+          <td><a href="#" data-toggle="collapse" :data-target="'#accordion-' + pod.name">{[{pod.name}]}</a></td>
+          <td v-if="pod.status === 'Running'"><span style='color:green;'>{[{pod.status}]}</span></td>
+          <td v-else><span style='color:orange;'>{[{pod.status}]}</span></td>
+        </tr>
+      </div>
 
   {% if instance_details['details'] and instance_details['details']['pods'] and instance_details['details']['pods'][0]['kind'] != 'Error' %}
     {% for pod in instance_details['details']['pods'] %}

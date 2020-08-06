@@ -7,7 +7,11 @@ from flask import (flash, redirect, render_template,
 from connect_api import (list_instances_request, 
                         list_user_groups,
                         list_users_instances_request,
-                        get_user_access_token)
+                        get_user_access_token,
+                        get_instance_details,
+                        get_instance_logs)
+import pprint
+pp = pprint.PrettyPrinter(indent=4)
 
 
 @app.route('/instances_ajax', methods=['GET'])
@@ -60,10 +64,9 @@ def view_instance(name):
 
         # Initialize separate list queries for multiplex request
         instance_detail_query = '/v1alpha3/instances/' + name + '?token=' + query['token'] + '&detailed'
-        instance_log_query = '/v1alpha3/instances/' + name + '/logs' + '?token=' + query['token']
+        # instance_log_query = '/v1alpha3/instances/' + name + '/logs' + '?token=' + query['token']
         # Set up multiplex JSON
-        multiplexJson = {instance_detail_query: {"method":"GET"},
-                            instance_log_query: {"method":"GET"}}
+        multiplexJson = {instance_detail_query: {"method":"GET"}}
         # POST request for multiplex return
         multiplex = requests.post(
             slate_api_endpoint + '/v1alpha3/multiplex', params=query, json=multiplexJson)
@@ -71,7 +74,7 @@ def view_instance(name):
         # print("multiplex: {}".format(multiplex))
         # Parse post return for instance, instance details, and instance logs
         instance_details = multiplex[instance_detail_query]['body']
-        instance_log = multiplex[instance_log_query]['body']
+        # instance_log = multiplex[instance_log_query]['body']
         # print("instance details: {}".format(instance_details))
         # print('-----')
         # print("instance logs: {}".format(instance_log))
@@ -79,10 +82,10 @@ def view_instance(name):
         if instance_details:
             instance_details = json.loads(multiplex[instance_detail_query]['body'])
         # print("instance details: {}".format(instance_details))
-        if instance_log:
-            instance_log = json.loads(multiplex[instance_log_query]['body'])
-        else:
-            instance_log = {'logs': ''}
+        # if instance_log:
+        #     instance_log = json.loads(multiplex[instance_log_query]['body'])
+        # else:
+        #     instance_log = {'logs': ''}
 
         instance_status = True
         # print("instance details: {}".format(instance_details))
@@ -94,10 +97,32 @@ def view_instance(name):
             return render_template('404.html')
   
         # pretty_print = json.dumps(instance_details, sort_keys = True, indent = 2)
-        return render_template('instance_profile.html', name=name,
-                                instance_details=instance_details,
-                                instance_status=instance_status,
-                                instance_log=instance_log)
+        return render_template('instance_profile.html', name=name)
+
+
+@app.route('/get-instance-details-xhr/<name>', methods=['GET'])
+@authenticated
+@instance_authenticated
+def instance_profile_xhr(name):
+    """
+    - View detailed instance information on SLATE
+    """
+    if request.method == 'GET':
+        instance_details = get_instance_details(name)
+        pp.pprint(instance_details)
+        return jsonify(instance_details)
+
+
+@app.route('/get-instance-logs-xhr/<name>', methods=['GET'])
+@authenticated
+@instance_authenticated
+def get_instance_logs_xhr(name):
+    """
+    - View detailed instance information on SLATE
+    """
+    if request.method == 'GET':
+        instance_logs = get_instance_logs(name)
+        return jsonify(instance_logs)
 
 
 @app.route('/instances/<name>/delete_instance', methods=['GET'])

@@ -966,7 +966,6 @@ def delete_group(name):
             flash("Successfully deleted group", 'success')
         else:
             print("The status code for deleting the group was not 200: {}".format(r))
-            flash('Failed to delete group', 'warning')
 
         return redirect(url_for('list_groups'))
 

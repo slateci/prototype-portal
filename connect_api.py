@@ -321,3 +321,11 @@ def get_instance_details(instance_id):
     instance_details = requests.get(slate_api_endpoint + '/v1alpha3/instances/' + instance_id, params=query)
     instance_details = instance_details.json()
     return instance_details
+
+
+def get_instance_logs(instance_id):
+    access_token = get_user_access_token(session)
+    query = {'token': access_token}
+    response = requests.get(slate_api_endpoint + '/v1alpha3/instances/' + instance_id + '/logs', params=query)
+    instance_logs = response.json()
+    return instance_logs
